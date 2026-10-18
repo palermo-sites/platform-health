@@ -1,0 +1,15 @@
+{
+  "slug": "annika",
+  "name": "Annika Palermo",
+  "domain": "annikapalermo.com",
+  "owner": "Jeffrey Palermo",
+  "visibility": "public",
+  "hosting": "github-pages",
+  "framework": "astro",
+  "uatUrl": "https://palermo-sites.github.io/annika-site-uat/",
+  "scorecard": {
+    "enabled": true,
+    "since": "2026-10-12",
+    "actionsWorkflows": "staging.yml!pull_request:uat,uat.yml:uat,deploy.yml@main:prod"
+  }
+}

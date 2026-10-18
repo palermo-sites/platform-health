@@ -1,0 +1,40 @@
+# Platform health dashboard of palermo-sites (website-platform-kit decision 0008): every 30 minutes, on every registry
+# change (the kit's workflow registry pushes registry/ here) and by hand, read every website system's public data and
+# publish the page to this repository's GitHub Pages. No secret: the run's own token reads public repositories.
+name: platform
+
+on:
+  schedule:
+    - cron: '12,42 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+
+concurrency:
+  group: platform
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read the platform
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/platform.py --out _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

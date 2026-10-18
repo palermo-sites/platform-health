@@ -1,0 +1,9 @@
+{
+  "slug": "example",
+  "name": "Example website (template for a registry file; never created)",
+  "domain": "example.palermo-sites.invalid",
+  "owner": "Jeffrey Palermo",
+  "visibility": "public",
+  "hosting": "github-pages",
+  "example": true
+}

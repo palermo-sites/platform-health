@@ -1,0 +1,39 @@
+{
+  "name": "palermo-sites website platform",
+  "githubOrg": "palermo-sites",
+  "repository": "palermo-sites/website-platform-kit",
+  "systemRepositorySuffix": "-site",
+  "defaultVisibility": "public",
+  "requiredEnvironments": [
+    "uat",
+    "prod"
+  ],
+  "requiredChecks": [
+    "build",
+    "links",
+    "html"
+  ],
+  "slugPattern": "^[a-z][a-z0-9-]{1,30}[a-z0-9]$",
+  "uat": {
+    "provider": "github-pages",
+    "repositorySuffix": "-site-uat",
+    "branch": "gh-pages",
+    "deployKeySecret": "UAT_DEPLOY_KEY",
+    "workflow": "uat.yml"
+  },
+  "branchProtection": {
+    "requiredChecks": [
+      "build"
+    ],
+    "requirePullRequest": true,
+    "requiredApprovals": 0
+  },
+  "scorecard": {
+    "location": "each system repository (decision 0005)",
+    "workflow": "scorecard.yml",
+    "dataBranch": "scorecard-data",
+    "sourceSecret": "SCORECARD_SOURCE_TOKEN",
+    "actionsWorkflows": "uat.yml:uat,deploy.yml@main:prod",
+    "environments": "uat:UAT,prod:Delivered"
+  }
+}
