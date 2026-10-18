@@ -6,10 +6,18 @@
   "visibility": "public",
   "hosting": "github-pages",
   "framework": "astro",
-  "uatUrl": "https://palermo-sites.github.io/annika-site-uat/",
+  "uatUrl": "https://uat.annikapalermo.com/",
+  "prodUrl": "https://annikapalermo.com/",
   "scorecard": {
     "enabled": true,
     "since": "2026-10-12",
     "actionsWorkflows": "staging.yml!pull_request:uat,uat.yml:uat,deploy.yml@main:prod"
+  },
+  "customDomain": {
+    "prod": "annikapalermo.com",
+    "uat": "uat.annikapalermo.com",
+    "wwwRedirect": true,
+    "httpsEnforced": true,
+    "connected": "2026-10-18"
   }
 }
