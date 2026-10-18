@@ -59,7 +59,7 @@ def collect(token):
         health = get(health_url + 'health.json?' + str(int(time.time())))
         envs = []
         for name, label, wf, url, q in (('uat', 'UAT', uat.get('workflow', 'uat.yml'), s.get('uatUrl'), {}),
-                                        ('prod', 'Prod', 'deploy.yml', pages.get('html_url'), {'branch': 'main'})):
+                                        ('prod', 'Prod', 'deploy.yml', s.get('prodUrl') or pages.get('html_url'), {'branch': 'main'})):
             done, fly = last_run(repo, wf, token, **q) if meta else (None, None)
             h = next((e for e in (health or {}).get('environments', []) if e['name'] == name), None)
             envs.append({'name': name, 'label': label, 'url': url, 'workflow': wf, 'last': done, 'inFlight': fly,
