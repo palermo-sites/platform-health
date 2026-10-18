@@ -127,6 +127,16 @@ table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:6px 8px;
 .arrow{align-self:center;color:var(--muted)}footer{color:var(--muted);font-size:12px;margin:30px 0 10px}
 """
 CSS += """
+/* Zoomed into one system: its health dashboard over the whole screen, inside the platform's page (agentic kit 0017). */
+.zoom{position:fixed;inset:0;z-index:10;display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--bg);transform-origin:0 0;will-change:transform,opacity}
+.zoom[hidden]{display:none}
+.zoom-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:8px clamp(12px,2vw,28px);background:var(--bar);font-size:.9rem}
+.zoom-bar button{font:inherit;font-weight:500;padding:6px 14px;color:var(--link);background:transparent;border:1px solid var(--link);border-radius:6px;cursor:pointer}
+.zoom-bar #zoom-name{font-weight:700;font-size:1.1rem}.zoom-bar a{margin-left:auto}
+.zoom-stage{min-height:0}.zoom iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+body[data-zoomed]{overflow:hidden}body[data-zoomed] .layout{visibility:hidden}
+[data-zoom]{cursor:zoom-in}[data-zoom]:focus-visible{outline:2px solid var(--link);outline-offset:3px}
+
 .layout{display:grid;grid-template-columns:190px 1fr}.side{background:var(--side);border-right:1px solid var(--line);min-height:100vh;padding:14px 0}
 .side a{display:block;padding:6px 18px;color:var(--ink)}.side .h{padding:12px 18px 4px;color:var(--muted);font-size:11px;letter-spacing:.06em}
 .land{background:#0c1727;border:1px solid var(--line);border-radius:6px;padding:14px}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center}
@@ -198,7 +208,7 @@ def page(d):
     for x in S:
         tiles = ''.join(f'<div>{tile(e["last"], e["inFlight"])}<br>{esc(e["label"].upper())}</div>' for e in x['environments'])
         prod = x['environments'][-1]
-        h.append(f'<a class="sys {cls.get(x["state"], "")}" href="{esc(x["healthDashboard"] or x["repositoryUrl"])}"><b>{esc(x["slug"])}</b><br>'
+        h.append(f'<a class="sys {cls.get(x["state"], "")}" href="{esc(x["healthDashboard"] or x["repositoryUrl"])}"{(" data-zoom=" + chr(34) + esc(x["slug"]) + chr(34)) if x["healthDashboard"] else ""}><b>{esc(x["slug"])}</b><br>'
                  f'<span style="font-size:12px">{esc(x["name"])}</span><br><span class="muted" style="font-size:11px">{esc(x["framework"] or "")} · GitHub Pages × 2</span>'
                  f'<div class="tiles">{tiles}</div><span style="font-size:12px">prod {esc(prod["last"]["sha"] if prod["last"] else "–")} · {esc(ago(prod["last"]["at"], now) if prod["last"] else "")}</span><br>'
                  f'<span style="font-size:12px;color:{"#ff8a8a" if x["problems"] else "#8fe0b0"}">{esc(x["state"])}</span></a>')
@@ -206,7 +216,7 @@ def page(d):
              '<div class="shared"><b>GitHub Actions</b><br><span style="font-size:12px">ci, uat, deploy, scorecard, health</span></div>'
              '<div class="shared"><b>GitHub Pages</b><br><span style="font-size:12px">prod in the site repository, UAT in &lt;slug&gt;-site-uat, health in &lt;slug&gt;-site-health</span></div>'
              '<div class="shared"><b>Scorecard (cmis)</b><br><span style="font-size:12px">daily delivery facts on each site\'s scorecard-data</span></div></div>'
-             '<div class="legend"><span class="tile success">✓</span>last deploy succeeded <span class="tile failure">✕</span>failed <span class="tile run">↻</span>deploying <span class="tile none">·</span>none yet · A system\'s box opens its health dashboard.</div></div>')
+             '<div class="legend"><span class="tile success">✓</span>last deploy succeeded <span class="tile failure">✕</span>failed <span class="tile run">↻</span>deploying <span class="tile none">·</span>none yet · A system\'s box zooms into its health dashboard.</div></div>')
     # systems
     h.append(f'<h2 id="systems">Systems</h2>')
     for x in S:
@@ -224,7 +234,7 @@ def page(d):
                      f'<td>{esc(f"{e["uptime"] * 100:.2f}%" if e["uptime"] is not None else "–")}</td><td class="muted">{esc(e["workflow"])}</td></tr>')
         g = x['green']
         prodc = ((t.get('deployments') or {}).get('prod') or {}).get('count')
-        h.append(f'<div class="pg"><div class="ph"><b>{esc(x["slug"])}</b> <span class="muted">{esc(x["name"])} · owner {esc(x["owner"])}</span>'
+        h.append(f'<div class="pg"><div class="ph">{("<a data-zoom=" + chr(34) + esc(x["slug"]) + chr(34) + " href=" + chr(34) + esc(x["healthDashboard"]) + chr(34) + "><b>" + esc(x["slug"]) + "</b></a>") if x["healthDashboard"] else "<b>" + esc(x["slug"]) + "</b>"} <span class="muted">{esc(x["name"])} · owner {esc(x["owner"])}</span>'
                  f'<span class="state {"down" if x["state"] == "production affected" else ("degraded" if x["problems"] else "healthy")}" style="margin-left:auto">{esc(x["state"])}</span></div><div class="pb">'
                  f'<table><thead><tr><th>Environment</th><th>Last deploy</th><th>Node</th><th>Uptime 7 d</th><th>Workflow</th></tr></thead><tbody>{rows}</tbody></table>'
                  f'<div class="grid" style="margin-top:10px">'
@@ -238,9 +248,49 @@ def page(d):
                  '</div>' + (f'<p style="color:#ffb4b4">{esc("; ".join(x["problems"]))}</p>' if x['problems'] else '') + '</div></div>')
     h.append(f'<footer>Data: <a href="platform.json">platform.json</a>, written by workflow <code>platform</code> of palermo-sites/platform-health every 30 minutes and on every registry change'
              + (f' (registry at kit commit {esc(P["registryCommit"][:7])})' if P.get('registryCommit') else '') + '. Public data only; no secret. Kit decision 0008.</footer></main></div>')
+    zs = {x['slug']: {'name': x['name'], 'url': x['healthDashboard']} for x in S if x['healthDashboard']}
     js = "document.querySelectorAll('[data-ago]').forEach(e=>{const m=Math.round((Date.now()-new Date(e.dataset.ago))/60000);e.textContent=m<1?'just now':m+' min ago'});"
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">'
-            f'<title>Platform Health Dashboard – {esc(P["name"])}</title><style>{CSS}</style></head><body>{"".join(h)}<script>{js}</script></body></html>\n')
+            f'<title>Platform Health Dashboard – {esc(P["name"])}</title><style>{CSS}</style></head><body>{"".join(h)}'
+            f'<div class="zoom" id="zoom" hidden><div class="zoom-bar"><button type="button" id="zoom-out">&larr; Platform</button><span id="zoom-name"></span>'
+            f'<a id="zoom-own" target="_blank" rel="noopener">Open the dashboard itself</a></div><div class="zoom-stage" id="zoom-stage"></div></div>'
+            f'<script type="application/json" id="zoom-systems">{json.dumps(zs).replace("<", "\\u003c")}</script><script>{js}{JS_ZOOM}</script></body></html>\n')
+
+
+JS_ZOOM = r'''
+// Zooming from the platform into one system and back out, as the agentic platform kit does (its decision 0017): a click
+// on a system loads its health dashboard in a frame that starts exactly over what was clicked and grows to the whole
+// screen while the platform scales up around that spot and fades. "Platform", Escape and Back zoom out.
+(()=>{const byId=id=>document.getElementById(id);const still=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DURATION=800,EASING='cubic-bezier(.6, 0, .2, 1)';const SYS=JSON.parse(byId('zoom-systems').textContent);let open='';
+const find=s=>SYS[s]||null;const wallEl=()=>document.querySelector('.layout');
+function into(r){return `translate(${r.left}px, ${r.top}px) scale(${Math.max(r.width,1)/innerWidth}, ${Math.max(r.height,1)/innerHeight})`}
+function origin(slug){const c=[...document.querySelectorAll(`[data-zoom="${CSS.escape(slug)}"]`)];return c.find(o=>{const r=o.getBoundingClientRect();return r.width>0&&r.bottom>0&&r.top<innerHeight})||c[0]||null}
+function play(el,frames,back){if(still())return Promise.resolve();const a=el.animate(frames,{duration:DURATION,easing:EASING,direction:back?'reverse':'normal',fill:'both'});return a.finished.then(()=>a.cancel(),()=>{})}
+function wallFrames(r){const w=wallEl().getBoundingClientRect();const sc=Math.min(12,Math.max(innerWidth/Math.max(r.width,1),innerHeight/Math.max(r.height,1)));const at=`${r.left+r.width/2-w.left}px ${r.top+r.height/2-w.top}px`;
+return [{transformOrigin:at,transform:'scale(1)',opacity:1},{transformOrigin:at,transform:`scale(${sc})`,opacity:0}]}
+async function zoomIn(slug,animate){const sy=find(slug);if(!sy||open===slug)return;const from=origin(slug);
+const r=from?from.getBoundingClientRect():new DOMRect(innerWidth/2,innerHeight/2,1,1);const layer=byId('zoom');
+byId('zoom-name').textContent=sy.name;byId('zoom-own').href=sy.url;
+const f=document.createElement('iframe');f.id='zoom-frame';f.title=`The health dashboard of ${sy.name}`;f.referrerPolicy='no-referrer';f.src=sy.url;
+byId('zoom-stage').replaceChildren(f);layer.hidden=false;open=slug;
+if(animate)await Promise.all([play(layer,[{transform:into(r),opacity:.35},{transform:'none',opacity:1}],false),play(wallEl(),wallFrames(r),false)]);
+document.body.dataset.zoomed=slug;byId('zoom-out').focus({preventScroll:true})}
+async function zoomOut(animate){if(!open)return;const slug=open;const layer=byId('zoom');open='';delete document.body.dataset.zoomed;const from=origin(slug);
+if(animate&&from){const r=from.getBoundingClientRect();await Promise.all([play(layer,[{transform:into(r),opacity:.35},{transform:'none',opacity:1}],true),play(wallEl(),wallFrames(r),true)])}
+layer.hidden=true;byId('zoom-stage').replaceChildren();if(from)from.focus({preventScroll:true})}
+function follow(animate){const slug=decodeURIComponent(location.hash.slice(1));if(slug&&find(slug))return zoomIn(slug,animate);return zoomOut(animate)}
+function go(slug){history.pushState(null,'',`#${encodeURIComponent(slug)}`);zoomIn(slug,true)}
+function out(){if(!open)return;history.pushState(null,'',location.pathname+location.search);zoomOut(true)}
+document.addEventListener('click',e=>{if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+const l=e.target.closest&&e.target.closest('[data-zoom]');if(!l||!find(l.dataset.zoom))return;e.preventDefault();go(l.dataset.zoom)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')return out();
+if(e.key===' '){const l=e.target.closest&&e.target.closest('[data-zoom]');if(l&&find(l.dataset.zoom)){e.preventDefault();go(l.dataset.zoom)}}});
+byId('zoom-out').addEventListener('click',out);addEventListener('popstate',()=>follow(true));
+// The health dashboard in the frame asks to go back to the platform with its own "Platform dashboard" link.
+addEventListener('message',e=>{if(e.origin===location.origin&&e.data==='platform-zoom-out')out()});
+follow(false)})();
+'''
 
 
 def main():
