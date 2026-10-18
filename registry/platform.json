@@ -35,5 +35,18 @@
     "sourceSecret": "SCORECARD_SOURCE_TOKEN",
     "actionsWorkflows": "uat.yml:uat,deploy.yml@main:prod",
     "environments": "uat:UAT,prod:Delivered"
+  },
+  "dashboards": {
+    "platform": {
+      "repository": "palermo-sites/platform-health",
+      "url": "https://palermo-sites.github.io/platform-health/",
+      "registryWorkflow": "registry.yml",
+      "deployKeySecret": "PLATFORM_HEALTH_DEPLOY_KEY"
+    },
+    "systemHealth": {
+      "repositorySuffix": "-site-health",
+      "template": "health",
+      "workflow": "health.yml"
+    }
   }
 }
